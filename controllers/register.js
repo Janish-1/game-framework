@@ -63,7 +63,7 @@ const register = async (req, res) => {
         // Encrypt the password using crypto
         const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
 
-        const newUser = new User({ name, email, password: hashedPassword, temptoken, permtoken: null, otp });
+        const newUser = new User({ name, email, password: hashedPassword, temptoken, permtoken: null, otp ,updatedAt: Date.now()});
 
         await newUser.save();
 

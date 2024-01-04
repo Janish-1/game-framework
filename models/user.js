@@ -33,6 +33,9 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  updatedAt: {
+    type: Date,
+  }
 }, { collection: 'users' }); // Specify the collection name here
 
 // Create a User model based on the schema

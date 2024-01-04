@@ -51,6 +51,7 @@ const login = async (req, res) => {
             } while (existingUserWithTempTokenperm); // Keep generating until a unique token is found
 
             user.permtoken = permtoken; // Set the generated permtoken for the user
+            user.updatedAt = Date.now();
             await user.save();
 
             const responseData = {
