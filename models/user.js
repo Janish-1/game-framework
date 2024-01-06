@@ -19,11 +19,9 @@ const userSchema = new mongoose.Schema({
   },
   temptoken: {
     type:String,
-    unique:true,
   },
   permtoken:{
     type:String,
-    unique:true,
   },
   otp:{
     type:Number,
