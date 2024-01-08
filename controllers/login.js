@@ -26,15 +26,15 @@ function generateEncodedRandomStringperm(length) {
 }
 
 const login = async (req, res) => {
-    const { email, password } = req.body;
+    const { name, email, password } = req.body;
 
     try {
-        const user = await User.findOne({ email: email });
+        const user = await User.findOne({ $or: [{ email: email }, { name: name }] });
 
         if (!user) {
             return res.status(404).json({ ResponseCode: 404, success: false, ResponseMessage: 'User not found' });
         }
-
+        
         const hashedpassword = crypto.createHash('sha256').update(password).digest('hex');
 
         // Check if the entered password matches the stored hashed password
