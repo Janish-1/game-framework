@@ -40,7 +40,8 @@ const upload = multer({ storage });
 app.post('/register',Routes);
 app.post('/login',Routes);
 app.post('/newotp',Routes);
-app.post('/verifyotp',Routes); 
+app.post('/verifyotp',Routes);
+app.post('/otplogin',Routes); 
 
 // Route to handle file upload to Cloudinary and update user's data
 app.post('/profileIMG', upload.single('image'), async (req, res) => {

@@ -42,7 +42,7 @@ const newotp = async (req, res) => {
             success: true,
             ResponseMessage: 'New OTP generated and updated successfully',
             newOTP: otp,
-            updatedUser: updatedUser
+            responseData: updatedUser
         });
     } catch (error) {
         console.error('Error generating and updating OTP:', error);
@@ -80,7 +80,20 @@ const verifyotp = async (req, res) => {
             return res.status(400).json({ ResponseCode: 400, success: false, ResponseMessage: 'OTP expired' });
         }
         
-        return res.status(200).json({ ResponseCode: 200,success: true, ResponseMessage: 'OTP verified successfully' });
+        // Encapsulating user-related data within a 'userData' object in the response
+        const userData = {
+            name: user.name,
+            email: user.email,
+            temptoken: user.temptoken
+            // Add other necessary user data here
+        };
+
+        return res.status(200).json({ 
+            ResponseCode: 200, 
+            success: true, 
+            ResponseMessage: 'OTP verified successfully',
+            responseData: userData // Encapsulated user data
+        });
     } catch (error) {
         console.error('Error in OTP verification:', error);
         return res.status(500).json({ ResponseCode: 500,success: false, ResponseMessage: 'Failed to verify OTP', error: error.message });

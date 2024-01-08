@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 
 // Define the User Schema
-const userSchema = new mongoose.Schema({
+const moneySchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -17,18 +17,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  temptoken: {
-    type:String,
-  },
   permtoken:{
     type:String,
-  },
-  otp:{
-    type:Number,
-  },
-  pfp:{
-    type:String,
-    default: null,
   },
   money:{
     type:Number,
@@ -41,9 +31,9 @@ const userSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
   }
-}, { collection: 'users' }); // Specify the collection name here
+}, { collection: 'moneyrequests' }); // Specify the collection name here
 
 // Create a User model based on the schema
-const User = mongoose.model('users', userSchema);
+const MoneyRequests = mongoose.model('moneyrequests', moneySchema);
 
-module.exports = User;
+module.exports = MoneyRequests;

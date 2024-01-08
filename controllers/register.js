@@ -72,7 +72,6 @@ const register = async (req, res) => {
             name: newUser.name,
             email: newUser.email,
             temptoken: temptoken, // Replace this with your token generation logic
-            permtoken: newUser.permtoken,
             otp: otp, // Replace this with your OTP generation logic
         };
 

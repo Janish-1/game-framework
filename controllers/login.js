@@ -28,11 +28,19 @@ function generateEncodedRandomStringperm(length) {
 const login = async (req, res) => {
     const { email, password } = req.body;
 
+    const authHeader = req.headers['authorization'];
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ ResponseCode: 401, success: false, ResponseMessage: 'Unauthorized - Bearer token not found' });
+    }
+
+    const token = authHeader.split(' ')[1]; // Extracting the token part from the header
+
     try {
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ temptoken: token, email: email });
 
         if (!user) {
-            return res.status(404).json({ ResponseCode: 404, ResponseMessage: 'User not found. Please sign up.', success: false });
+            return res.status(404).json({ ResponseCode: 404, success: false, ResponseMessage: 'User not found' });
         }
 
         const hashedpassword = crypto.createHash('sha256').update(password).digest('hex');
@@ -72,6 +80,56 @@ const login = async (req, res) => {
     }
 };
 
+const otplogin = async (req, res) => {
+    const { otp } = req.body; // Extract the 'otp' from the request body
+    const authHeader = req.headers['authorization'];
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ ResponseCode: 401, success: false, ResponseMessage: 'Unauthorized - Bearer token not found' });
+    }
+
+    const token = authHeader.split(' ')[1]; // Extracting the token part from the header
+
+    try {
+        const user = await User.findOne({ temptoken: token });
+
+        if (!user) {
+            return res.status(404).json({ ResponseCode: 404, success: false, ResponseMessage: 'User not found' });
+        }
+
+        // Check if the provided OTP matches the stored OTP in the database
+        if (user.otp === otp) { // Compare the provided OTP with the user's stored OTP
+
+            const currentTime = new Date();
+            const lastUpdateTime = new Date(user.updatedAt);
+            const timeDifferenceInMinutes = Math.floor((currentTime - lastUpdateTime) / (1000 * 60));
+
+            if (timeDifferenceInMinutes > 1) {
+                return res.status(400).json({ ResponseCode: 400, success: false, ResponseMessage: 'OTP expired' });
+            }
+
+            // Clear the OTP here if you want to allow the user to log in only once with this OTP
+            user.otp = null;
+            await user.save();
+
+            const responseData = {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+            };
+
+            return res.status(200).json({ ResponseCode: 200, ResponseMessage: 'OTP verified. Login successful.', success: true, ResponseData: responseData });
+        } else {
+            // Invalid OTP
+            return res.status(401).json({ ResponseCode: 401, ResponseMessage: 'Invalid OTP', success: false });
+        }
+    } catch (error) {
+        console.error('Error in OTP login:', error); // Log the error for debugging
+        return res.status(500).json({ ResponseCode: 500, ResponseMessage: 'Failed to verify OTP', success: false, error: error.message });
+    }
+};
+
 module.exports = {
     login,
+    otplogin,
 };
