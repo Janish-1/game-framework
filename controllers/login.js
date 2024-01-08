@@ -28,16 +28,8 @@ function generateEncodedRandomStringperm(length) {
 const login = async (req, res) => {
     const { email, password } = req.body;
 
-    const authHeader = req.headers['authorization'];
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ ResponseCode: 401, success: false, ResponseMessage: 'Unauthorized - Bearer token not found' });
-    }
-
-    const token = authHeader.split(' ')[1]; // Extracting the token part from the header
-
     try {
-        const user = await User.findOne({ temptoken: token, email: email });
+        const user = await User.findOne({ email: email });
 
         if (!user) {
             return res.status(404).json({ ResponseCode: 404, success: false, ResponseMessage: 'User not found' });
