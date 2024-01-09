@@ -42,6 +42,16 @@ app.post('/login',Routes);
 app.post('/newotp',Routes);
 app.post('/verifyotp',Routes);
 app.post('/otplogin',Routes); 
+app.post('/addcoin',Routes);
+app.post('/removecoin',Routes);
+app.post('/approvetransaction',Routes);
+app.post('/declinetransaction',Routes);
+app.post('/moneyreqsemail',Routes);
+app.get('/moneyreqsall',Routes);
+app.post('/moneyreqsobject',Routes);
+app.get('/allusers', Routes);
+app.get('/users/:id', Routes);
+app.post('/users/email', Routes);
 
 // Route to handle file upload to Cloudinary and update user's data
 app.post('/profileIMG', upload.single('image'), async (req, res) => {

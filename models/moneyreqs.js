@@ -6,23 +6,26 @@ const moneySchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
   },
   email: {
     type: String,
     required: true,
-    unique: true,
   },
   password: {
     type: String,
     required: true,
   },
-  permtoken:{
+  type: {
     type:String,
+    required: true,
   },
-  money:{
+  amount: {
     type:Number,
-    default: 0,
+    required:true,
+  },
+  status: {
+    type: String,
+    required:true,
   },
   createdAt: {
     type: Date,

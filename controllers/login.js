@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 
 function generateRandomAlphanumeric(length) {
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -34,7 +35,7 @@ const login = async (req, res) => {
         if (!user) {
             return res.status(404).json({ ResponseCode: 404, success: false, ResponseMessage: 'User not found' });
         }
-        
+
         const hashedpassword = crypto.createHash('sha256').update(password).digest('hex');
 
         // Check if the entered password matches the stored hashed password
@@ -121,7 +122,65 @@ const otplogin = async (req, res) => {
     }
 };
 
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find({}); // Excluding sensitive data
+
+        if (users.length === 0) {
+            return res.status(404).json({ ResponseCode: 404, ResponseMessage: 'No users found', success: false });
+        }
+
+        return res.status(200).json({ ResponseCode: 200, ResponseMessage: 'Users retrieved successfully', success: true, ResponseData: users });
+    } catch (error) {
+        console.error('Error in getting all users:', error);
+        return res.status(500).json({ ResponseCode: 500, ResponseMessage: 'Failed to retrieve users', success: false, error: error.message });
+    }
+};
+
+const getUserById = async (req, res) => {
+    const userId = req.params.id; // Extract the user ID from the request parameters
+
+    try {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ ResponseCode: 400, ResponseMessage: 'Invalid user ID', success: false });
+        }
+
+        const objectId = new mongoose.Types.ObjectId(userId); // Convert string ID to ObjectId
+
+        const user = await User.findById(objectId);
+
+        if (!user) {
+            return res.status(404).json({ ResponseCode: 404, ResponseMessage: 'User not found', success: false });
+        }
+
+        return res.status(200).json({ ResponseCode: 200, ResponseMessage: 'User retrieved successfully', success: true, ResponseData: user });
+    } catch (error) {
+        console.error('Error in getting user by ID:', error);
+        return res.status(500).json({ ResponseCode: 500, ResponseMessage: 'Failed to retrieve user', success: false, error: error.message });
+    }
+};
+
+const getUserByEmail = async (req, res) => {
+    const { userEmail } = req.body; // Extract the user email from the request parameters
+
+    try {
+        const user = await User.findOne({ email: userEmail }); // Excluding sensitive data
+
+        if (!user) {
+            return res.status(404).json({ ResponseCode: 404, ResponseMessage: 'User not found', success: false });
+        }
+
+        return res.status(200).json({ ResponseCode: 200, ResponseMessage: 'User retrieved successfully', success: true, ResponseData: user });
+    } catch (error) {
+        console.error('Error in getting user by email:', error);
+        return res.status(500).json({ ResponseCode: 500, ResponseMessage: 'Failed to retrieve user', success: false, error: error.message });
+    }
+};
+
 module.exports = {
     login,
     otplogin,
+    getAllUsers,
+    getUserById,
+    getUserByEmail,
 };
