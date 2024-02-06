@@ -1,4 +1,4 @@
-const User = require('../models/user');
+const User = require('../../models/user');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 

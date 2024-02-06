@@ -5,7 +5,6 @@ const connectDB = require("./config/database"); // Import database configuration
 const morgan = require("morgan"); // Import morgan for logging
 const Routes = require("./routes/Routes");
 const path = require("path");
-const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const dotenv = require("dotenv");
 const fs = require("fs");
@@ -42,10 +41,6 @@ app.use(bodyParser.json());
 // Connect to MongoDB
 connectDB(); // Call the function to establish MongoDB connection
 
-// Define multer storage and file upload settings
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-
 // Use the helloRoutes for the /hello endpoint
 app.post("/register", Routes);
 app.post("/login", Routes);
@@ -63,6 +58,8 @@ app.get("/allusers", Routes);
 app.get("/users/:id", Routes);
 app.post("/users/email", Routes);
 app.post("/imageupload", Routes);
+app.post("/updateusername",Routes);
+app.post("/updatepassword",Routes);
 
 // Start the server
 app.listen(PORT, () => {

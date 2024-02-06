@@ -1,5 +1,5 @@
-const User = require('../models/user');
-const MoneyRequests = require('../models/moneyreqs');
+const User = require('../../models/user');
+const MoneyRequests = require('../../models/moneyreqs');
 
 const addcoin = async (req, res) => {
     const authHeader = req.headers['authorization'];

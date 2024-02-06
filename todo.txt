@@ -1,0 +1,33 @@
+Reset Password:
+router.post('/users/resetpassword', resetPassword);
+
+User Logout:
+router.post('/logout', logout);
+
+User Deactivation:
+router.delete('/users/:id', deactivateUser);
+
+Search Users:
+router.get('/users/search', searchUsers);
+
+Notification Preferences:
+router.put('/users/:id/notifications', updateNotificationPreferences);
+
+User Activity Feed:
+router.get('/users/:id/activity', getUserActivity);
+
+Terms of Service and Privacy Policy:
+router.get('/terms', getTermsOfService);
+router.get('/privacy', getPrivacyPolicy);
+
+Feedback or Contact Form:
+router.post('/feedback', submitFeedback);
+
+Two-Factor Authentication (2FA):
+router.post('/users/:id/2fa/enable', enableTwoFactorAuth);
+router.post('/users/:id/2fa/disable', disableTwoFactorAuth);
+router.post('/users/:id/2fa/verify', verifyTwoFactorAuth);
+
+Admin-only Endpoints:
+router.get('/admin/users', getAllUsersForAdmin);
+router.delete('/admin/users/:id', deleteUserByAdmin);

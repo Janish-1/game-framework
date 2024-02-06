@@ -1,4 +1,4 @@
-const User = require('../models/user');
+const User = require('../../models/user');
 const crypto = require('crypto');
 
 // Function to generate a random six-digit number
