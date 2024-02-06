@@ -60,6 +60,7 @@ app.post("/users/email", Routes);
 app.post("/imageupload", Routes);
 app.post("/updateusername",Routes);
 app.post("/updatepassword",Routes);
+app.get("/generateresettoken",Routes);
 
 // Start the server
 app.listen(PORT, () => {

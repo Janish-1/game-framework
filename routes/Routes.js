@@ -7,6 +7,7 @@ const { newotp, verifyotp } = require('../controllers/LoginRegister/otp');
 const { addcoin, removecoin, approvetransaction, declinetransaction, getMoneyRequestsByEmail, getAllMoneyRequests, getMoneyRequestByObjectId } = require('../controllers/MoneySystem/money');
 const imageRoutes = require('../controllers/ImageSystem/image');
 const { updateUsername,updatepassword } = require('../controllers/PlayerProfile/playerupdate');
+const { generateresettoken } = require('../controllers/PlayerProfile/resetpassword');
 
 // Login and Register Endpoints
 router.post('/register',register);
@@ -35,5 +36,6 @@ router.post('/imageupload', imageRoutes);
 // Profile Update
 router.post('/updateusername',updateUsername);
 router.post('/updatepassword',updatepassword);
+router.get('/generateresettoken',generateresettoken);
 
 module.exports = router;
