@@ -52,55 +52,7 @@ app.post('/moneyreqsobject',Routes);
 app.get('/allusers', Routes);
 app.get('/users/:id', Routes);
 app.post('/users/email', Routes);
-
-// Route to handle file upload to Cloudinary and update user's data
-app.post('/profileIMG', upload.single('image'), async (req, res) => {
-  try {
-    const file = req.file; // Access the uploaded file from req.file
-
-    const authHeader = req.headers['authorization'];
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ responseCode: 401, success: false, responseMessage: 'Unauthorized - Bearer token not found' });
-    }
-
-    const token = authHeader.split(' ')[1]; // Extracting the token part from the header
-
-    if (!file) {
-      return res.status(400).json({ responseCode: 400, success: false, responseMessage: 'No file uploaded' });
-    }
-
-    // Convert the buffer to a base64 data URL
-    const base64String = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-
-    // Upload image to Cloudinary
-    const result = await cloudinary.uploader.upload(base64String, {
-      resource_type: 'auto',
-    });
-
-    const imageUrl = result.secure_url;
-
-    // Update the user's profile picture URL in the User table based on the token
-    const updatedUser = await User.findOneAndUpdate(
-      { permtoken: token },
-      { pfp: imageUrl },
-      { new: true }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({ responseCode: 404, success: false, responseMessage: 'User not found' });
-    }
-
-    res.status(200).json({ responseCode: 200, success: true, url: imageUrl, responseMessage: 'Profile image uploaded and user updated successfully' });
-  } catch (error) {
-    res.status(500).json({
-      responseCode: 500,
-      success: false,
-      responseMessage: 'Error uploading file to Cloudinary or updating user data',
-      error: error.message,
-    });
-  }
-});
+app.post('/imageupload',Routes);
 
 // Start the server
 app.listen(PORT, () => {

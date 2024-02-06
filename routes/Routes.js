@@ -6,6 +6,9 @@ const { login, otplogin, getAllUsers, getUserById, getUserByEmail } = require('.
 const { newotp, verifyotp } = require('../controllers/otp');
 const { addcoin, removecoin, approvetransaction, declinetransaction, getMoneyRequestsByEmail, getAllMoneyRequests, getMoneyRequestByObjectId } = require('../controllers/money');
 
+// Require the image upload route module
+const imageRoutes = require('../controllers/image');
+
 router.post('/register',register);
 router.post('/login',login);
 router.post('/newotp',newotp);
@@ -21,5 +24,7 @@ router.post('/moneyreqsobject',getMoneyRequestByObjectId);
 router.get('/allusers', getAllUsers);
 router.get('/users/:id', getUserById);
 router.post('/users/email', getUserByEmail);
+// Use the image upload route
+router.post('/imageupload', imageRoutes);
 
 module.exports = router;
