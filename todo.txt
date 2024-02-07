@@ -1,6 +1,3 @@
-Reset Password:
-router.post('/users/resetpassword', resetPassword);
-
 User Logout:
 router.post('/logout', logout);
 
