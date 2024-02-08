@@ -61,6 +61,8 @@ app.post("/imageupload", Routes);
 app.post("/updateusername",Routes);
 app.post("/updatepassword",Routes);
 app.get("/generateresettoken",Routes);
+app.get("/sendtokentoemail",Routes);
+app.post("/resetpassword",Routes);
 
 // Start the server
 app.listen(PORT, () => {

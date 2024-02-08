@@ -87,13 +87,13 @@ const updatepassword = async (req, res) => {
     return res.status(200).json({
       success: true,
       responsecode: 200,
-      responsemessage: "Username updated successfully",
+      responsemessage: "Password updated successfully",
     });
   } catch (error) {
-    console.error("Error in Updating Username:", error);
+    console.error("Error in Updating Password:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to update Username",
+      message: "Failed to update Password",
       error: error.message,
     });
   }
