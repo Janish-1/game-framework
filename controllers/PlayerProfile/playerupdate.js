@@ -99,6 +99,47 @@ const updatepassword = async (req, res) => {
   }
 };
 
+const logout = async (req,res) => {
+  const authHeader = req.headers['authorization'];
+
+  if(!authHeader && authHeader.startsWith("Bearer ")){
+    return res.status(400).json({
+      'success':false,
+      'message': "Invalid Authorization Token",
+      'responsecode': 400,
+    });
+  }
+
+  const permtoken = authHeader.split(' ')[1];
+
+  try{
+    const user = await User.findOne({ permtoken });
+
+    if (!user){
+      return res.status(400).json({
+        success: false,
+        message: "No User Found"
+      });
+    }
+
+    user.permtoken = null;
+    await user.save();
+    
+    return res.status(200).json({
+      'success':true,
+      'message': "Logout Successful",
+      'responsecode': 200,
+    });
+  } catch (error) {
+    console.error("Error in Updating Password:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update Password",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   updateUsername,
   updatepassword,
