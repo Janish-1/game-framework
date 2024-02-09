@@ -63,6 +63,8 @@ app.post("/updatepassword",Routes);
 app.get("/generateresettoken",Routes);
 app.get("/sendtokentoemail",Routes);
 app.post("/resetpassword",Routes);
+app.post("/newtemptoken",Routes);
+app.post("/logout",Routes);
 
 // Start the server
 app.listen(PORT, () => {

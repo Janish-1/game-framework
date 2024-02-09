@@ -6,8 +6,9 @@ const { login, otplogin, getAllUsers, getUserById, getUserByEmail } = require('.
 const { newotp, verifyotp } = require('../controllers/LoginRegister/otp');
 const { addcoin, removecoin, approvetransaction, declinetransaction, getMoneyRequestsByEmail, getAllMoneyRequests, getMoneyRequestByObjectId } = require('../controllers/MoneySystem/money');
 const imageRoutes = require('../controllers/ImageSystem/image');
-const { updateUsername,updatepassword } = require('../controllers/PlayerProfile/playerupdate');
+const { updateUsername,updatepassword,logout } = require('../controllers/PlayerProfile/playerupdate');
 const { generateresettoken,sendtokentoemail,changepassword } = require('../controllers/PlayerProfile/resetpassword');
+const { newtemptoken } = require('../controllers/tokengenerators/token');
 
 // Login and Register Endpoints
 router.post('/register',register);
@@ -39,5 +40,9 @@ router.post('/updatepassword',updatepassword);
 router.get('/generateresettoken',generateresettoken);
 router.get('/sendtokentoemail',sendtokentoemail);
 router.post('/resetpassword',changepassword);
+router.post('/logout',logout);
+
+//Token Regenerators
+router.post('/newtemptoken',newtemptoken);
 
 module.exports = router;

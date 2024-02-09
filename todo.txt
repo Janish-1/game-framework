@@ -1,11 +1,5 @@
-User Logout:
-router.post('/logout', logout);
-
 User Deactivation:
 router.delete('/users/:id', deactivateUser);
-
-Search Users:
-router.get('/users/search', searchUsers);
 
 Notification Preferences:
 router.put('/users/:id/notifications', updateNotificationPreferences);

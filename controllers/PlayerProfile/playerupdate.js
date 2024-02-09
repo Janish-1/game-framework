@@ -143,4 +143,5 @@ const logout = async (req,res) => {
 module.exports = {
   updateUsername,
   updatepassword,
+  logout,
 };
