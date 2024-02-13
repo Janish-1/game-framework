@@ -75,10 +75,10 @@ const register = async (req, res) => {
             otp: otp, // Replace this with your OTP generation logic
         };
 
-        res.status(200).json({ ResponseCode: 200, ResponseMessage: 'signup successfully.', success: true, ResponseData: responseData });
+        return res.status(200).json({ ResponseCode: 200, ResponseMessage: 'signup successfully.', success: true, ResponseData: responseData });
     } catch (error) {
         console.error('Error in user registration:', error); // Log the error for debugging
-        res.status(500).json({ ResponseCode: 500, ResponseMessage: 'Failed to register user', success: false, error: error.message });
+        return res.status(500).json({ ResponseCode: 500, ResponseMessage: 'Failed to register user', success: false, error: error.message });
     }
 };
 

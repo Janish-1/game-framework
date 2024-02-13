@@ -46,7 +46,7 @@ const newotp = async (req, res) => {
         });
     } catch (error) {
         console.error('Error generating and updating OTP:', error);
-        res.status(500).json({ ResponseCode: 500,success: false, ResponseMessage: 'Failed to generate and update OTP', error: error.message });
+        return res.status(500).json({ ResponseCode: 500,success: false, ResponseMessage: 'Failed to generate and update OTP', error: error.message });
     }
 };
 

@@ -36,9 +36,9 @@ router.post('/imageupload', upload.single('image'), async (req, res) => {
     const imageUrl = result.secure_url;
 
     // Respond with the image URL
-    res.status(200).json({ responseCode: 200, success: true, url: imageUrl, responseMessage: 'Image uploaded successfully' });
+    return res.status(200).json({ responseCode: 200, success: true, url: imageUrl, responseMessage: 'Image uploaded successfully' });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       responseCode: 500,
       success: false,
       responseMessage: 'Error uploading file to Cloudinary',

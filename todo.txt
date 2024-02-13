@@ -1,3 +1,5 @@
+New Permanent Token Endpoint
+
 User Deactivation:
 router.delete('/users/:id', deactivateUser);
 
