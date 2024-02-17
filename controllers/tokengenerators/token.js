@@ -63,6 +63,32 @@ const newtemptoken = async (req,res) => {
     }); 
 }
 
+const newpermtoken = async (req,res) => {
+    const headers = req.headers['secret_key'];
+    const { playerid } = req.body;
+
+    const realkey = process.env.SECRET_KEY;
+
+    if (!headers || headers !== realkey){
+        return res.status(400).json({
+            success:"false",
+            responsemessage:"token not verified",
+            responsecode: 400,
+        });
+    }
+
+    const player = await User.findOne({ _id:playerid});
+
+    if (!player){
+        return res.status(400).json({
+            success:"false",
+            responsemessage:"token not verified",
+            responsecode: 400,
+        });
+    }
+}
+
 module.exports={
     newtemptoken,
+    newpermotken,
 }
