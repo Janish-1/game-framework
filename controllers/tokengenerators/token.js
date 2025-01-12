@@ -90,5 +90,5 @@ const newpermtoken = async (req,res) => {
 
 module.exports={
     newtemptoken,
-    newpermotken,
+    newpermtoken,
 }
