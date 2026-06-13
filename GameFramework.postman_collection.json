@@ -1,0 +1,893 @@
+{
+  "info": {
+    "name": "Game Framework API",
+    "_postman_id": "game-framework-collection",
+    "description": "Express.js + MongoDB API for a game backend. Covers auth, OTP, player profiles, coin system, and image uploads.\n\n**Variables to set:**\n- `base_url` — e.g. `http://localhost:3001`\n- `permtoken` — token from `/login` response (`ResponseData.permtoken`)\n- `temptoken` — token from `/newtemptoken` response\n- `secret_key` — value of `SECRET_KEY` env var\n- `user_id` — MongoDB ObjectId of a user\n- `request_id` — MongoDB ObjectId of a MoneyRequest",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",    "value": "http://localhost:3001", "type": "string" },
+    { "key": "permtoken",   "value": "",                      "type": "string" },
+    { "key": "temptoken",   "value": "",                      "type": "string" },
+    { "key": "secret_key",  "value": "",                      "type": "string" },
+    { "key": "user_id",     "value": "",                      "type": "string" },
+    { "key": "request_id",  "value": "",                      "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PlayerOne\",\n  \"email\": \"player@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/register",
+              "host": ["{{base_url}}"],
+              "path": ["register"]
+            },
+            "description": "Create a new user account.\n\n**Rate limit:** 100 req/15 min.\n\nOn success, use `/newtemptoken` or `/login` to obtain a token."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"ResponseCode\": 200,\n  \"ResponseMessage\": \"signup successfully.\",\n  \"success\": true,\n  \"ResponseData\": {\n    \"id\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n    \"name\": \"PlayerOne\",\n    \"email\": \"player@example.com\"\n  }\n}"
+            },
+            {
+              "name": "400 Email Already Exists",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Email already exists\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.ResponseData && json.ResponseData.permtoken) {",
+                  "  pm.collectionVariables.set('permtoken', json.ResponseData.permtoken);",
+                  "  pm.collectionVariables.set('user_id', json.ResponseData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"player@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            },
+            "description": "Authenticate with email + password. Returns a `permtoken` (Bearer token for all protected routes).\n\n**Rate limit:** 10 req/15 min.\n\nThe test script auto-saves `permtoken` and `user_id` to collection variables."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"ResponseCode\": 200,\n  \"ResponseMessage\": \"Login successful.\",\n  \"success\": true,\n  \"ResponseData\": {\n    \"id\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n    \"name\": \"PlayerOne\",\n    \"email\": \"player@example.com\",\n    \"permtoken\": \"<base64-255-char-token>\"\n  }\n}"
+            },
+            {
+              "name": "401 Invalid Password",
+              "status": "Unauthorized", "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid password\"\n}"
+            },
+            {
+              "name": "404 User Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"User not found\"\n}"
+            },
+            {
+              "name": "429 Rate Limited",
+              "status": "Too Many Requests", "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"message\": \"Too many authentication attempts, please try again later.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{permtoken}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": ["{{base_url}}"],
+              "path": ["logout"]
+            },
+            "description": "Invalidate the current `permtoken`. Requires `Authorization: Bearer <permtoken>`."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Logout Successful\",\n  \"responsecode\": 200\n}"
+            },
+            {
+              "name": "400 Invalid Token",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid or missing token\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OTP",
+      "item": [
+        {
+          "name": "Generate New OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{temptoken}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/newotp",
+              "host": ["{{base_url}}"],
+              "path": ["newotp"]
+            },
+            "description": "Generate and store a new 6-digit OTP for the user identified by `temptoken`. OTP expires after 1 minute."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"ResponseCode\": 200,\n  \"success\": true,\n  \"ResponseMessage\": \"New OTP generated and updated successfully\",\n  \"newOTP\": 482019,\n  \"responseData\": {\n    \"id\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n    \"name\": \"PlayerOne\",\n    \"email\": \"player@example.com\",\n    \"otp\": 482019,\n    \"updatedAt\": \"2026-06-13T12:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized", "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Bearer token not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{temptoken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": 482019\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/verifyotp",
+              "host": ["{{base_url}}"],
+              "path": ["verifyotp"]
+            },
+            "description": "Verify a 6-digit OTP. Must be submitted within 1 minute of generation."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"ResponseCode\": 200,\n  \"success\": true,\n  \"ResponseMessage\": \"OTP verified successfully\",\n  \"responseData\": {\n    \"name\": \"PlayerOne\",\n    \"email\": \"player@example.com\",\n    \"temptoken\": \"<base64-255-char-token>\"\n  }\n}"
+            },
+            {
+              "name": "400 Invalid or Expired OTP",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid OTP or OTP expired\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "OTP Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.ResponseData && json.ResponseData.id) {",
+                  "  pm.collectionVariables.set('user_id', json.ResponseData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{temptoken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": 482019\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/otplogin",
+              "host": ["{{base_url}}"],
+              "path": ["otplogin"]
+            },
+            "description": "Login using a valid OTP instead of password. OTP must be within 1 minute of generation."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"ResponseCode\": 200,\n  \"ResponseMessage\": \"OTP verified. Login successful.\",\n  \"success\": true,\n  \"ResponseData\": {\n    \"id\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n    \"name\": \"PlayerOne\",\n    \"email\": \"player@example.com\"\n  }\n}"
+            },
+            {
+              "name": "400 OTP Expired",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"OTP expired\"\n}"
+            },
+            {
+              "name": "401 Invalid OTP",
+              "status": "Unauthorized", "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid OTP\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{permtoken}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/allusers",
+              "host": ["{{base_url}}"],
+              "path": ["allusers"]
+            },
+            "description": "Retrieve all registered users. Excludes `password`, `temptoken`, and `permtoken` fields. Requires `permtoken`."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"ResponseCode\": 200,\n  \"ResponseMessage\": \"Users retrieved successfully\",\n  \"success\": true,\n  \"ResponseData\": [\n    {\n      \"id\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n      \"name\": \"PlayerOne\",\n      \"email\": \"player@example.com\",\n      \"pfp\": null,\n      \"money\": 100,\n      \"otp\": null,\n      \"createdAt\": \"2026-06-13T12:00:00.000Z\",\n      \"updatedAt\": \"2026-06-13T12:00:00.000Z\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "404 No Users",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"No users found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            },
+            "description": "Retrieve a single user by their MongoDB ObjectId. No auth required. Excludes sensitive fields."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"ResponseCode\": 200,\n  \"ResponseMessage\": \"User retrieved successfully\",\n  \"success\": true,\n  \"ResponseData\": {\n    \"id\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n    \"name\": \"PlayerOne\",\n    \"email\": \"player@example.com\",\n    \"pfp\": null,\n    \"money\": 100,\n    \"otp\": null,\n    \"createdAt\": \"2026-06-13T12:00:00.000Z\",\n    \"updatedAt\": \"2026-06-13T12:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "400 Invalid ID",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid user ID format\"\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"User not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get User by Email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userEmail\": \"player@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/users/email",
+              "host": ["{{base_url}}"],
+              "path": ["users", "email"]
+            },
+            "description": "Retrieve a user by email address. No auth required. Excludes sensitive fields."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"ResponseCode\": 200,\n  \"ResponseMessage\": \"User retrieved successfully\",\n  \"success\": true,\n  \"ResponseData\": {\n    \"id\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n    \"name\": \"PlayerOne\",\n    \"email\": \"player@example.com\",\n    \"pfp\": null,\n    \"money\": 100,\n    \"otp\": null,\n    \"createdAt\": \"2026-06-13T12:00:00.000Z\",\n    \"updatedAt\": \"2026-06-13T12:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"User not found\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Update Username",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{permtoken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"NewPlayerName\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/updateusername",
+              "host": ["{{base_url}}"],
+              "path": ["updateusername"]
+            },
+            "description": "Change the username of the authenticated user. Requires `permtoken`."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"responsecode\": 200,\n  \"responsemessage\": \"Username updated successfully\"\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized", "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid or missing token\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{permtoken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"newSecurePass456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/updatepassword",
+              "host": ["{{base_url}}"],
+              "path": ["updatepassword"]
+            },
+            "description": "Update password of the authenticated user. The value should be the new plaintext password (bcrypt-hashed server-side). Requires `permtoken`."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"responsecode\": 200,\n  \"responsemessage\": \"Password updated successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Password Reset",
+      "item": [
+        {
+          "name": "Generate Reset Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{permtoken}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/generateresettoken",
+              "host": ["{{base_url}}"],
+              "path": ["generateresettoken"]
+            },
+            "description": "Generate a 50-byte hex reset token and store it on the user record. Call this before `/sendtokentoemail`."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"responsecode\": 200,\n  \"responsemessage\": \"Reset token generated\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Send Reset Token to Email",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{permtoken}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sendtokentoemail",
+              "host": ["{{base_url}}"],
+              "path": ["sendtokentoemail"]
+            },
+            "description": "Send the stored reset token to the user's email via Nodemailer/Gmail. Call `/generateresettoken` first.\n\n**Requires:** `EMAIL_USER` and `EMAIL_PASS` env vars."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"responsecode\": 200,\n  \"responsemessage\": \"Email Sent Successfully\"\n}"
+            },
+            {
+              "name": "500 Email Failed",
+              "status": "Internal Server Error", "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Email send failed\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{permtoken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"brandNewPass789\",\n  \"resettoken\": \"<50-byte-hex-token-from-email>\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/resetpassword",
+              "host": ["{{base_url}}"],
+              "path": ["resetpassword"]
+            },
+            "description": "Reset the password using the token received by email. Both `permtoken` (header) and `resettoken` (body) must match."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"responsecode\": 200,\n  \"responsemessage\": \"Password updated successfully\"\n}"
+            },
+            {
+              "name": "402 Token Mismatch",
+              "status": "Payment Required", "code": 402,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Reset token mismatch\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Coins",
+      "item": [
+        {
+          "name": "Add Coins",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{permtoken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/addcoin",
+              "host": ["{{base_url}}"],
+              "path": ["addcoin"]
+            },
+            "description": "Request to add coins to the authenticated user's balance. Creates a `MoneyRequest` with `status: pending`. Must be approved via `/approvetransaction` to affect balance."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Added 100 coins to user's balance\",\n  \"user\": {\n    \"id\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n    \"name\": \"PlayerOne\",\n    \"email\": \"player@example.com\",\n    \"money\": 200\n  }\n}"
+            },
+            {
+              "name": "400 Invalid Amount",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Amount is required and must be a positive number\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Remove Coins",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{permtoken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 50\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/removecoin",
+              "host": ["{{base_url}}"],
+              "path": ["removecoin"]
+            },
+            "description": "Request to deduct coins from the authenticated user's balance. Creates a `MoneyRequest` with `status: pending`. Must be approved via `/approvetransaction`."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Removed 50 coins from user's balance\",\n  \"user\": {\n    \"id\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n    \"name\": \"PlayerOne\",\n    \"email\": \"player@example.com\",\n    \"money\": 150\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Approve Transaction",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": \"{{request_id}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/approvetransaction",
+              "host": ["{{base_url}}"],
+              "path": ["approvetransaction"]
+            },
+            "description": "Approve a pending MoneyRequest. Updates user balance and sets request status to `approved`.\n\n⚠️ No auth check — intended for admin use only."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Transaction request approved\",\n  \"moneyRequest\": {\n    \"id\": \"64a1b2c3d4e5f6a7b8c9d0e2\",\n    \"user\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n    \"name\": \"PlayerOne\",\n    \"email\": \"player@example.com\",\n    \"type\": \"add\",\n    \"amount\": 100,\n    \"status\": \"approved\",\n    \"createdAt\": \"2026-06-13T12:00:00.000Z\",\n    \"updatedAt\": \"2026-06-13T12:01:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "400 Not Pending",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Transaction not in pending status\"\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Transaction request not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Decline Transaction",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": \"{{request_id}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/declinetransaction",
+              "host": ["{{base_url}}"],
+              "path": ["declinetransaction"]
+            },
+            "description": "Decline a pending MoneyRequest. Sets status to `declined`. Balance is not affected.\n\n⚠️ No auth check — intended for admin use only."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Transaction request declined\",\n  \"moneyRequest\": {\n    \"id\": \"64a1b2c3d4e5f6a7b8c9d0e2\",\n    \"user\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n    \"name\": \"PlayerOne\",\n    \"email\": \"player@example.com\",\n    \"type\": \"add\",\n    \"amount\": 100,\n    \"status\": \"declined\",\n    \"createdAt\": \"2026-06-13T12:00:00.000Z\",\n    \"updatedAt\": \"2026-06-13T12:01:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get All Money Requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/moneyreqsall",
+              "host": ["{{base_url}}"],
+              "path": ["moneyreqsall"]
+            },
+            "description": "Retrieve all MoneyRequest records across all users. No auth required.\n\n⚠️ Exposes all transaction history — should be secured in production."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"All money requests found\",\n  \"moneyRequests\": [\n    {\n      \"id\": \"64a1b2c3d4e5f6a7b8c9d0e2\",\n      \"user\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n      \"name\": \"PlayerOne\",\n      \"email\": \"player@example.com\",\n      \"type\": \"add\",\n      \"amount\": 100,\n      \"status\": \"pending\",\n      \"createdAt\": \"2026-06-13T12:00:00.000Z\",\n      \"updatedAt\": \"2026-06-13T12:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Money Requests by Email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userEmail\": \"player@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/moneyreqsemail",
+              "host": ["{{base_url}}"],
+              "path": ["moneyreqsemail"]
+            },
+            "description": "Retrieve all MoneyRequests for a specific user by email. No auth required."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Money requests found\",\n  \"moneyRequests\": [\n    {\n      \"id\": \"64a1b2c3d4e5f6a7b8c9d0e2\",\n      \"user\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n      \"name\": \"PlayerOne\",\n      \"email\": \"player@example.com\",\n      \"type\": \"add\",\n      \"amount\": 100,\n      \"status\": \"pending\",\n      \"createdAt\": \"2026-06-13T12:00:00.000Z\",\n      \"updatedAt\": \"2026-06-13T12:00:00.000Z\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"No money requests found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Money Request by ID",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": \"{{request_id}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/moneyreqsobject",
+              "host": ["{{base_url}}"],
+              "path": ["moneyreqsobject"]
+            },
+            "description": "Retrieve a single MoneyRequest by its ObjectId. No auth required."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Money request found\",\n  \"moneyRequest\": {\n    \"id\": \"64a1b2c3d4e5f6a7b8c9d0e2\",\n    \"user\": \"64a1b2c3d4e5f6a7b8c9d0e1\",\n    \"name\": \"PlayerOne\",\n    \"email\": \"player@example.com\",\n    \"type\": \"add\",\n    \"amount\": 100,\n    \"status\": \"pending\",\n    \"createdAt\": \"2026-06-13T12:00:00.000Z\",\n    \"updatedAt\": \"2026-06-13T12:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Money request not found\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tokens",
+      "item": [
+        {
+          "name": "Generate New Temp Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// After this call, retrieve the new temptoken from the database",
+                  "// or use the /login endpoint to get a permtoken instead"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "secret_key", "value": "{{secret_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"playerid\": \"{{user_id}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/newtemptoken",
+              "host": ["{{base_url}}"],
+              "path": ["newtemptoken"]
+            },
+            "description": "Regenerate the `temptoken` for a specific user. Requires the `secret_key` custom header matching the `SECRET_KEY` env var.\n\nUsed server-side or by admin tools, not by end-users."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"responsemessage\": \"Temp Token Regenerated\",\n  \"responsecode\": 200\n}"
+            },
+            {
+              "name": "400 Invalid Secret Key",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid secret key or user not found\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Images",
+      "item": [
+        {
+          "name": "Upload Image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "description": "Image file to upload (binary)",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/imageupload",
+              "host": ["{{base_url}}"],
+              "path": ["imageupload"]
+            },
+            "description": "Upload an image to Cloudinary. No auth required.\n\n**Content-Type:** `multipart/form-data`\n**Field name:** `image`\n\nReturns a Cloudinary `secure_url`.\n\n**Requires env vars:** `CLOUD_NAME`, `API_KEY`, `API_SECRET`."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"responseCode\": 200,\n  \"success\": true,\n  \"url\": \"https://res.cloudinary.com/your-cloud/image/upload/v1234567890/sample.jpg\",\n  \"responseMessage\": \"Image uploaded successfully\"\n}"
+            },
+            {
+              "name": "400 No File",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"No file uploaded\"\n}"
+            },
+            {
+              "name": "500 Cloudinary Error",
+              "status": "Internal Server Error", "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Cloudinary upload failed\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
