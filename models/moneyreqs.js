@@ -1,8 +1,13 @@
-// models/user.js
+// models/moneyreqs.js
 const mongoose = require('mongoose');
 
-// Define the User Schema
+// Define the MoneyRequests Schema
 const moneySchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'users',
+    required: true,
+  },
   name: {
     type: String,
     required: true,
@@ -11,21 +16,17 @@ const moneySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  password: {
-    type: String,
-    required: true,
-  },
   type: {
-    type:String,
+    type: String,
     required: true,
   },
   amount: {
-    type:Number,
-    required:true,
+    type: Number,
+    required: true,
   },
   status: {
     type: String,
-    required:true,
+    required: true,
   },
   createdAt: {
     type: Date,
@@ -34,9 +35,8 @@ const moneySchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
   }
-}, { collection: 'moneyrequests' }); // Specify the collection name here
+}, { collection: 'moneyrequests' });
 
-// Create a User model based on the schema
 const MoneyRequests = mongoose.model('moneyrequests', moneySchema);
 
 module.exports = MoneyRequests;
